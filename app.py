@@ -1,4 +1,4 @@
-# Arquivo: backend/app.py (Ajustado)
+# Arquivo: backend/app.py (Versão Profissional Final)
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -20,7 +20,6 @@ class User(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(200), nullable=False)
-
     def __init__(self, nome, email, senha):
         self.nome = nome
         self.email = email
@@ -33,7 +32,13 @@ class Pedido(db.Model):
     status = db.Column(db.String(50), default='Recebido')
 
 # =======================================================================
-# SEU CARDÁPIO COM OS LINKS CORRIGIDOS PARA FUNCIONAR ONLINE
+# CÓDIGO QUE CRIA O BANCO DE DADOS E AS TABELAS AUTOMATICAMENTE
+# =======================================================================
+with app.app_context():
+    db.create_all()
+
+# =======================================================================
+# CARDÁPIO COM ENDEREÇOS COMPLETOS DAS IMAGENS NO SEU SITE NETLIFY
 # =======================================================================
 menu = {
     "Lanches": [
@@ -78,21 +83,13 @@ menu = {
     ]
 }
 
-# =======================================================================
-# AJUSTE 1: CÓDIGO QUE CRIA O BANCO DE DADOS AUTOMATICAMENTE
-# =======================================================================
-with app.app_context():
-    db.create_all()
-
 # --- ROTAS DA API ---
 @app.route('/api/cardapio')
 def get_cardapio():
     return jsonify(menu)
 
-# AJUSTE 2: ROTA DE PEDIDOS AGORA ACEITA GET (para listar) E POST (para criar)
 @app.route('/api/pedidos', methods=['POST', 'GET'])
 def gerenciar_pedidos():
-    # Se a requisição for POST, cria um novo pedido
     if request.method == 'POST':
         data = request.get_json()
         if not data or 'mesa' not in data or 'itens' not in data:
@@ -106,7 +103,6 @@ def gerenciar_pedidos():
         db.session.commit()
         return jsonify({ 'message': 'Pedido recebido com sucesso!', 'pedido_id': novo_pedido.id }), 201
     
-    # Se a requisição for GET, lista os pedidos para o painel
     if request.method == 'GET':
         pedidos = Pedido.query.order_by(Pedido.id.desc()).all()
         lista_de_pedidos = []
@@ -119,7 +115,6 @@ def gerenciar_pedidos():
             })
         return jsonify(lista_de_pedidos)
 
-# Rota de Cadastro (ainda não estamos usando, mas está aqui para o futuro)
 @app.route('/api/cadastro', methods=['POST'])
 def cadastro():
     data = request.get_json()
